@@ -17,8 +17,8 @@ int mosquitto_auth_plugin_init(void **user_data,
         struct mosquitto_opt *opts, 
         int opt_count
         ) {
-    database = (database_t *)malloc(sizeof(database_t));
-    user = (user_t *)malloc(sizeof(user_t));
+    database = malloc(sizeof(database_t));
+    user = malloc(sizeof(user_t));
 
     fprintf(stdout, "MOSQUITO_AUTH_PLUGIN_INIT\n");
     if (opt_count > 0){
