@@ -26,8 +26,7 @@ void dispose_db(void);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 int authenticate_user(user_t *user);
 
-static const char *sql_create_table = "DROP TABLE IF EXISTS mqtt_users;" \
-        "CREATE TABLE IF NOT EXISTS mqtt_users(" \
+static const char *sql_create_table = "CREATE TABLE IF NOT EXISTS mqtt_users(" \
         "id INT PRIMARY KEY NOT NULL," \
         "clientid TEXT NOT NULL," \
         "username TEXT NOT NULL," \
