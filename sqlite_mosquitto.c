@@ -1,12 +1,16 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "sqlite_mosquitto.h"
+#include "utils.h"
 
 sqlite3 *db;
-char *sql;
+int sqlopen;
+sqlite3_stmt *res;
+
 
 void get_sqlite_version(void) {
-    fprintf(stdout, "sqlite lib version %s\n", sqlite3_libversion());
+    print(4, "SQLITE plugin version %s\n", sqlite3_libversion());
 }
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
@@ -17,53 +21,62 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
     return 0;
 }
 
-void init_db(void){
-    fprintf(stdout, "Starting sqlite plugin.\n");
+int init_db(database_t *database){
+    print(4, "Starting sqlite authentication plugin.");
 
     get_sqlite_version();
 
     char *zErrMsg = 0;
-    int sqlopen = sqlite3_open("db.sqlite", &db);
+     sqlopen = sqlite3_open(database->database_file, &db);
 
     if ( sqlopen ) {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        return;
+        print(3, "Can't open database %s: %s",database->database_file, sqlite3_errmsg(db));
+        return 1;
     } else {
-        fprintf(stderr, "Opened database successfully\n");
+        print(4, "Opened database successfully from %s", database->database_file);
     }
-    sql = "CREATE TABLE mqtt_users(" \
-        "id INT PRIMARY KEY NOT NULL," \
-        "clientid TEXT NOT NULL," \
-        "username TEXT NOT NULL," \
-        "password TEXT NOT NULL);";
+    
 
-    sqlopen = sqlite3_exec(db, sql, callback, 0, (char **)zErrMsg);
+    sqlopen = sqlite3_exec(db, sql_create_table, callback, 0, (char **)zErrMsg);
 
     if( sqlopen != SQLITE_OK ){
-        fprintf(stderr, "SQL error [%d]: %s\n", sqlite3_errcode(db), sqlite3_errmsg(db));
+        print(3, "SQL error [%d]: %s", sqlite3_errcode(db), sqlite3_errmsg(db));
         sqlite3_free(zErrMsg);
+        return 1;
     } else {
-        fprintf(stdout, "Table created successfully\n");
+        print(4, "Table created successfully usign query: %s", sql_create_table);
     }
+    return 0;
 }
 
 int authenticate_user(user_t *user) {
-    fprintf(stdout, "Username %s\nPassword %s\n", user->username, user->password);
+    print(4, "Starting authentication with username and password.");
 
-    if (strncmp(user->username, "leo", 3) == 0) {
-        if (strncmp(user->password, "leo", 3) == 0) {
-            return USER_AUTHENTICATED;
-        } else {
-            return USER_PASSWORD_INCORRECT;
-        } 
-    }else {
-            return USER_USERNAME_INCORRECT;
+    sqlopen = sqlite3_prepare_v2(db, sql_select_user, -1, &res, 0);
+
+    if (sqlopen == SQLITE_OK) {
+        sqlite3_bind_text(res, 1, user->username, strlen(user->username), NULL);
+        sqlite3_bind_text(res, 2, user->password, strlen(user->password), NULL);
+    } else {
+        print(3, "Failed fetch username and password from database: %s", sqlite3_errmsg(db));
     }
-    return USER_UNKNOWN;
+
+    int step = sqlite3_step(res);
+       
+   if (step == SQLITE_ROW) {
+        if (strncmp(user->username, (const char*)sqlite3_column_text(res, 0), strlen(user->username)) == 0){
+            if (strncmp(user->password, (const char *)sqlite3_column_text(res, 1), strlen(user->password)) == 0){
+                return USER_AUTHENTICATED;
+            }
+        }
+    }
+    return USER_USERNAME_OR_PASSWORD_INCORRECT;
 }
 
 void dispose_db(void) {
-    fprintf(stdout, "Terminating sqlite plugin.\n");
+    print(4, "Terminating sqlite plugin.");
+    sqlite3_reset(res);
+    sqlite3_finalize(res);
     sqlite3_close(db);
     sqlite3_free(0);
 }

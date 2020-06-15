@@ -1,13 +1,16 @@
 #include "sqlite_auth_plugin.h"
 #include <string.h>
 #include <malloc.h>
+#include <stdlib.h>
 #include "sqlite_mosquitto.h"
+#include "utils.h"
 
 database_t *database;
 user_t *user;
 
 int mosquitto_auth_plugin_version(void) {
     fprintf(stdout, "Starting mosquitto plugin version %d\n", MOSQ_AUTH_PLUGIN_VERSION);
+    print(1, "Initializing the plugin in C: 1. %s, 2. %d, 3. %f" ,"primeiro", 2, 3.0);
     return MOSQ_AUTH_PLUGIN_VERSION;
 }
 int mosquitto_auth_plugin_init(void **user_data, 
@@ -21,21 +24,21 @@ int mosquitto_auth_plugin_init(void **user_data,
     if (opt_count > 0){
         for (int i = 0; i < opt_count; i++) {
             if (strncmp(opts[i].key, "sqlite_database_file", 20) == 0) {
-                fprintf(stdout, "Loading sqlite database file: %s\n", opts[i].value);
+                fprintf(stdout, "Loading sqlite database file: %s", opts[i].value);
                 database->database_file = opts[i].value;
             } else if (strncmp(opts[i].key, "sqlite_database_username_field", 30) == 0) {
                 database->username_field = opts[i].value;
-                fprintf(stdout, "Loading sqlite query username field: %s\n", database->username_field);
+                fprintf(stdout, "Loading sqlite query username field: %s", database->username_field);
             } else if (strncmp(opts[i].key, "sqlite_database_password_field", 30) == 0) {
                 database->password_field = opts[i].value;
-                fprintf(stdout, "Loading sqlite query password field: %s\n", database->password_field);
+                fprintf(stdout, "Loading sqlite query password field: %s", database->password_field);
             }
         } 
     } else {
-        fprintf(stderr, "There is no options to load sqlite authentication plugin.\n");
+        print(3, "There is no options to load sqlite authentication plugin.");
         return 1;
     }
-    //init_db();
+    init_db(database);
     return 0;
 }
 
@@ -47,7 +50,10 @@ int mosquitto_auth_plugin_cleanup(void *user_data,
     fprintf(stdout, "MOSQUITTO_AUTH_PLUGIN_CLEANUP\n");
     free(user);
     free(database);
-    //dispose_db(void);
+    dispose_db();
+    fflush(stdin);
+    fflush(stdout);
+    fflush(stderr);
     return 0;
 }
 
@@ -77,9 +83,9 @@ int mosquitto_auth_acl_check(void *user_data,
         ) {
     if (strncmp(msg->topic, "/teste", 5) == 0) {
         if (access == MOSQ_ACL_SUBSCRIBE) {
-            fprintf(stdout, "Your subscription was rejected by server on topic %s for user %s\n", msg->topic, user->username);
+            print(3, "Your subscription was rejected by server on topic %s for user %s", msg->topic, user->username);
         } else {
-            fprintf(stdout, "Your publishing was rejected by server on topic %s for user %s\n", msg->topic, user->username);
+            print(3, "Your publishing was rejected by server on topic %s for user %s", msg->topic, user->username);
         }
         return MOSQ_ERR_ACL_DENIED;
     }else {
@@ -95,19 +101,22 @@ int mosquitto_auth_unpwd_check(void *user_data,
         ) {
     user->username = username;
     user->password = password;
-    if (authenticate_user(user) == USER_AUTHENTICATED){
-        fprintf(stdout, "User successfuly authenticated.\n");    
-    }
+
     fprintf(stdout, "MOSQUITTO_AUTH_UNPWD_CHECK\n");
     if (username == NULL) {
-        fprintf(stderr, "Username must be provided.\n");
+        print(2, "Username must be provided.");
         return MOSQ_ERR_ACL_DENIED;
     }else if (password == NULL) {
-        fprintf(stderr, "Password must be provided.\n");
+        print(2, "Password must be provided.");
         return MOSQ_ERR_ACL_DENIED;
     }
-    
-    return 0;
+
+    if (authenticate_user(user) == USER_AUTHENTICATED){
+        print(1, "User successfuly authenticated.");
+        return MOSQ_ERR_SUCCESS;  
+    } 
+    print(2, "The provided username or password is incorrect.");
+    return MOSQ_ERR_ACL_DENIED;
 }
 
 int mosquitto_auth_psk_key_get(void *user_data, 

@@ -4,8 +4,7 @@
 #include <sqlite3.h>
 
 #define USER_AUTHENTICATED 0
-#define USER_PASSWORD_INCORRECT 1
-#define USER_USERNAME_INCORRECT 2
+#define USER_USERNAME_OR_PASSWORD_INCORRECT 1
 #define USER_HAS_NO_PERMITION 3
 #define USER_UNKNOWN 4
 
@@ -22,9 +21,25 @@ typedef struct {
 } user_t;
 
 void get_sqlite_version(void);
-void init_db(void);
+int init_db(database_t *database);
 void dispose_db(void);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 int authenticate_user(user_t *user);
+
+static const char *sql_create_table = "DROP TABLE IF EXISTS mqtt_users;" \
+        "CREATE TABLE IF NOT EXISTS mqtt_users(" \
+        "id INT PRIMARY KEY NOT NULL," \
+        "clientid TEXT NOT NULL," \
+        "username TEXT NOT NULL," \
+        "password TEXT NOT NULL);" \
+        "INSERT INTO mqtt_users (id,clientid,username,password) " \
+        "VALUES (0,'clientid','admin','password');";
+
+static const char *sql_select_user = "SELECT username,password "\
+        "FROM mqtt_users "\
+        "WHERE username = ? AND password = ?;";
+
+static const char *sql_insert_admin = "INSERT INTO mqtt_users (username,password) " \
+        "VALUES (admin,admin);";
 
 #endif
