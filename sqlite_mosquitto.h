@@ -27,7 +27,7 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 int authenticate_user(user_t *user);
 
 static const char *sql_create_table = "CREATE TABLE IF NOT EXISTS mqtt_users(" \
-        "id INT PRIMARY KEY NOT NULL," \
+        "id INTEGER PRIMARY KEY AUTOINCREMENT," \
         "clientid TEXT NOT NULL," \
         "username TEXT NOT NULL," \
         "password TEXT NOT NULL);" \
