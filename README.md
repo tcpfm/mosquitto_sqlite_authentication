@@ -40,7 +40,7 @@ Just execute the following command to test your plugin implamentantion
 ```# mosquitto -c /etc/mosquitto/mosquitto.conf```
 
 # Already working!
-- [ ] Simple authentication username/password
+- [x] Simple authentication username/password
 - [ ] IoT device group control
 - [ ] ACL for topic control
 - [ ] ACL for callback topic messages
