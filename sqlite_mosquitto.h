@@ -31,7 +31,7 @@ static const char *sql_create_table = "CREATE TABLE IF NOT EXISTS mqtt_users(" \
         "clientid TEXT NOT NULL," \
         "username TEXT NOT NULL," \
         "password TEXT NOT NULL);" \
-        "INSERT INTO mqtt_users (id,clientid,username,password) " \
+        "INSERT INTO mqtt_users (clientid,username,password) " \
         "VALUES ('clientid','admin','password');";
 
 static const char *sql_select_user = "SELECT username,password "\
