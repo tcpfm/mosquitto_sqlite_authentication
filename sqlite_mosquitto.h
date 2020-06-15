@@ -28,8 +28,8 @@ int authenticate_user(user_t *user);
 
 static const char *sql_create_table = "CREATE TABLE IF NOT EXISTS mqtt_users(" \
         "id INTEGER PRIMARY KEY AUTOINCREMENT," \
-        "clientid TEXT NOT NULL," \
-        "username TEXT NOT NULL," \
+        "clientid TEXT UNIQUE NOT NULL," \
+        "username TEXT UNIQUE NOT NULL," \
         "password TEXT NOT NULL);" \
         "INSERT INTO mqtt_users (clientid,username,password) " \
         "VALUES ('clientid','admin','password');";
