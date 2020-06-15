@@ -32,7 +32,7 @@ static const char *sql_create_table = "CREATE TABLE IF NOT EXISTS mqtt_users(" \
         "username TEXT NOT NULL," \
         "password TEXT NOT NULL);" \
         "INSERT INTO mqtt_users (id,clientid,username,password) " \
-        "VALUES (0,'clientid','admin','password');";
+        "VALUES ('clientid','admin','password');";
 
 static const char *sql_select_user = "SELECT username,password "\
         "FROM mqtt_users "\
