@@ -33,7 +33,7 @@ So, just copy one of the following plugin binary
 to your mosquitto config directory, in most of cases, copy to 
 >```/etc/mosquitto/```
 
-And do not forget to copy the ```sqlite_auth_plugin_debug.conf``` to the ```/etc/mosquitto/conf.d``` too.
+And do not forget to copy the ```sqlite_auth_plugin.conf``` to the ```/etc/mosquitto/conf.d``` too.
 
 ### If you are runnging in debug mode
 Just execute the following command to test your plugin implamentantion
