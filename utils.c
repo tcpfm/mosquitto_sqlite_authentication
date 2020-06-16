@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include "utils.h"
+
+char *temp_args;
 
 void print(int level, const char *message, ...) {
     va_list args;
@@ -34,4 +37,34 @@ void print(int level, const char *message, ...) {
     }
     
     va_end(args);
+}
+
+char *concatenate_by_args(const char *format, ...) {
+    
+    int args_size = strlen(format);
+    if (args_size <= 0) return NULL;
+    va_list args;
+    va_list args_cpy;
+    va_start(args, format);
+    
+    va_copy(args_cpy, args);
+    char *arg = NULL;
+    int x = 0;
+    while ((arg = va_arg(args, char *)) != NULL) {
+        print(3, "entrou no loog [%d] %s....", x++, arg);
+        args_size += strlen(arg);
+    }
+    print(3, "chegou aqui....");
+    if (temp_args != NULL) temp_args = NULL;
+    temp_args = malloc(sizeof(char *) * args_size +1);
+    
+    vsnprintf(temp_args, args_size,format, args_cpy);
+    va_end(args);
+    va_end(args_cpy);
+    return temp_args;
+}
+
+void dispose_utils(void) {
+    temp_args = NULL;
+    free(temp_args);
 }

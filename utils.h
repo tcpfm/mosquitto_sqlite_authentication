@@ -9,4 +9,6 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 void print(int level, const char *message, ...);
+char *concatenate_by_args(const char *format, ...);
+void dispose_utils(void);
 #endif
