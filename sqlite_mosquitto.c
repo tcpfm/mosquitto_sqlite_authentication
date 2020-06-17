@@ -17,17 +17,6 @@ static const char *sql_create_table_mqtt_users = "CREATE TABLE IF NOT EXISTS mqt
 
 const char *sql_select_user_statement_template = " SELECT id,%s,%s FROM " \
         "%s WHERE %s = ? AND %s = ?";
-
-// static const char *sql_select_statement_template = "SELECT id,";
-// static const char *sql_from_statement_template = " FROM ";
-// static const char *sql_where_statement_template = " WHERE ";
-// static const char *sql_and_statement_template = " AND ";
-// static const char *sql_question_statement_template = " = ? ";
-// static const char *sql_comma_statement_template = ",";
-//"WHERE username = ? AND password = ?";
-
-
-
 static const char *sql_insert_admin = "INSERT INTO mqtt_users (username,password) " \
         "VALUES (admin,admin);";
 
@@ -59,7 +48,8 @@ int open_db(database_t *database) {
 
 int create_table_mqtt_users(database_t *database) {
     char *zErrMsg = 0;
-    int sql_create_db_ret = sqlite3_exec(db, sql_create_table_mqtt_users, callback, 0, (char **)zErrMsg);
+    int sql_create_db_ret = sqlite3_exec(db, sql_create_table_mqtt_users, \
+            callback, 0, (char **)zErrMsg);
 
     switch (sql_create_db_ret) {
     case SQLITE_OK:
@@ -129,8 +119,10 @@ int authenticate_user(user_t *user, database_t *database) {
     int step = sqlite3_step(res);
        
    if (step == SQLITE_ROW) {
-        if (strncmp(user->username, (const char*)sqlite3_column_text(res, 1), strlen(user->username)) == 0){
-            if (strncmp(user->password, (const char *)sqlite3_column_text(res, 2), strlen(user->password)) == 0){
+        if (strncmp(user->username, (const char*)sqlite3_column_text(res, 1), 
+                strlen(user->username)) == 0){
+            if (strncmp(user->password, (const char *)sqlite3_column_text(res, 2), 
+                    strlen(user->password)) == 0){
                 user->id = sqlite3_column_int(res, 0);
                 return USER_AUTHENTICATED;
             }

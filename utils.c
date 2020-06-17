@@ -64,5 +64,6 @@ void concatenate_by_args(char **ret, const char *format, ...) {
     print(4, "Setting return value to variable passed byref on address %u", ret);
     temp_args = NULL;
     ret = NULL;
-    print(4, "Confirming that variables passed byref was null on adresses %u and %u", temp_args, ret);
+    print(4, "Confirming that variables passed byref was null on adresses %u and %u", \
+            temp_args, ret);
 }
