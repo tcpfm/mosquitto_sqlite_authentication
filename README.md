@@ -41,6 +41,9 @@ Just execute the following command to test your plugin implamentantion
 
 # Already working!
 - [x] Simple authentication username/password
+- [ ] Create / Request / Update / Delete Users via MQTT palyload
+- [ ] Device auto-registration
+- [ ] Device auto-change password each 'X' days
 - [ ] IoT device group control
 - [ ] ACL for topic control
 - [ ] ACL for callback topic messages

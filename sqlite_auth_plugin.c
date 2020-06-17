@@ -59,13 +59,15 @@ int mosquitto_auth_plugin_init(void **user_data,
                 database->table_name = opts[i].value;
                 print(4, "Loading sqlite table name field: %s", database->table_name);
             }
-            
         } 
     } else {
         print(3, "There is no options to load sqlite authentication plugin.");
         return 1;
     }
-    init_db(database);
+    if (init_db(database) != 0) {
+        dispose_db();
+        return 1;
+    }
     return 0;
 }
 
@@ -78,7 +80,6 @@ int mosquitto_auth_plugin_cleanup(void *user_data,
     free(user);
     free(database);
     dispose_db();
-    dispose_utils();
     fflush(stdin);
     fflush(stdout);
     fflush(stderr);

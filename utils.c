@@ -4,7 +4,7 @@
 #include <string.h>
 #include "utils.h"
 
-char *temp_args;
+
 
 void print(int level, const char *message, ...) {
     va_list args;
@@ -39,32 +39,30 @@ void print(int level, const char *message, ...) {
     va_end(args);
 }
 
-char *concatenate_by_args(const char *format, ...) {
+void concatenate_by_args(char **ret, const char *format, ...) {
     
     int args_size = strlen(format);
-    if (args_size <= 0) return NULL;
+    if (args_size <= 0) return;
     va_list args;
     va_list args_cpy;
     va_start(args, format);
     
     va_copy(args_cpy, args);
     char *arg = NULL;
-    int x = 0;
-    while ((arg = va_arg(args, char *)) != NULL) {
-        print(3, "entrou no loog [%d] %s....", x++, arg);
-        args_size += strlen(arg);
-    }
-    print(3, "chegou aqui....");
-    if (temp_args != NULL) temp_args = NULL;
-    temp_args = malloc(sizeof(char *) * args_size +1);
+    char *temp_args;
+
+    while ((arg = va_arg(args, char *)) != NULL) args_size += strlen(arg);
     
+    temp_args = malloc(sizeof(char *) * args_size +1);
     vsnprintf(temp_args, args_size,format, args_cpy);
+    print(4, "Copying content to variable before malloc(), length: %d on memory address: %u", \
+            strlen(temp_args), temp_args);
+
     va_end(args);
     va_end(args_cpy);
-    return temp_args;
-}
-
-void dispose_utils(void) {
+    *ret = temp_args;
+    print(4, "Setting return value to variable passed byref on address %u", ret);
     temp_args = NULL;
-    free(temp_args);
+    ret = NULL;
+    print(4, "Confirming that variables passed byref was null on adresses %u and %u", temp_args, ret);
 }

@@ -83,14 +83,10 @@ int init_db(database_t *database){
     get_sqlite_version();
     if (open_db(database) == 0) {
         create_table_mqtt_users(database);
+    } else {
+        print(3, "Error opening database.");
+        return 1;
     }
-    
-    // sql_select_user_table= malloc(sizeof(char *) * \
-    //     (strlen(database->username_field) + strlen(database->password_field) + \
-    //     strlen(sql_select_statement_template) + strlen(sql_from_statement_template)) + \
-    //     strlen(sql_where_statement_template) + strlen(sql_and_statement_template) + \
-    //     strlen(database->table_name) + strlen(sql_question_statement_template) + \
-    //     strlen(sql_comma_statement_template));
     return 0;
 }
  
@@ -102,17 +98,17 @@ int authenticate_user(user_t *user, database_t *database) {
      * ALWAYS when call the function concatenate_by_args, you must (MUST)
      * pass the last parameter as NULL. It will return garbage otherwise
     */
-    char *sql_select_user_statement_template2 = concatenate_by_args( \
+    char *sql_select_user_statement_template_return;
+    concatenate_by_args(&sql_select_user_statement_template_return, \
             sql_select_user_statement_template, \
             database->username_field, database->password_field, database->table_name, \
             database->username_field, database->password_field, NULL);
+    print(4, "Confirming returned value on the same memory address as variable passed byref: %u", \
+            sql_select_user_statement_template_return);
     int sql_select_user_ret = sqlite3_prepare_v2(db, \
-            sql_select_user_statement_template2, -1, &res, 0);
+            sql_select_user_statement_template_return, -1, &res, 0);
 
-    sql_select_user_statement_template2 = NULL;
-
-    // this functions will free the malloced variables
-    dispose_utils();
+    sql_select_user_statement_template_return = NULL;
 
     switch (sql_select_user_ret) {
     case SQLITE_OK:
@@ -145,10 +141,8 @@ int authenticate_user(user_t *user, database_t *database) {
 
 void dispose_db(void) {
     print(4, "Terminating sqlite plugin.");
-    //free(sql_select_user_table);
     sqlite3_reset(res);
     sqlite3_finalize(res);
     sqlite3_close(db);
     sqlite3_free(0);
-    dispose_utils();
 }
