@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 DEBUG_OPT=-DMQAP_DEBUG
-CFLAGS=-Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-comment -ggdb -l sqlite3 -ldl
+CFLAGS=-Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-comment -ggdb -l json-c -l sqlite3 -ldl
 
 all : sqlite_auth_plugin.so 
 

@@ -8,13 +8,18 @@
 #include "sqlite_auth_plugin.h"
 #include "sqlite_mosquitto.h"
 #include "utils.h"
+#include "json.h"
 
 database_t  *database;
 user_t      *user;
-static const char *sqlite_database_file_path_key    = "opt_sqlite_database_file_path";
+manage_user_t *manage_user;
+
+char *manage_user_topic;
+static const char *sqlite_database_file_path_key    = "sqlite_database_file_path";
 static const char *sqlite_table_username_field_key  = "sqlite_table_username_field";
 static const char *sqlite_table_password_field_key  = "sqlite_table_password_field";
 static const char *sqlite_tsqlite_table_name_key    = "sqlite_table_name";
+static const char *sqlite_manage_users_topic_key    = "sqlite_manage_users_topic";
 
 int mosquitto_auth_plugin_version(void) {
     print(4, "FUNCTION: MOSQUITTO_AUTH_PLUGIN_VERSION");
@@ -51,7 +56,13 @@ int mosquitto_auth_plugin_init(void **user_data,
                         strlen(sqlite_table_password_field_key)) == 0) {
                     database->password_field = opts[i].value;
                     print(4, "Loading sqlite query password field: %s", database->password_field);
-            }
+            } else
+                if (strncmp(opts[i].key, sqlite_manage_users_topic_key, \
+                        strlen(sqlite_manage_users_topic_key)) == 0) {
+                    manage_user_topic = opts[i].value;
+                    print(4, "Loading root topic to manage users: %s", manage_user_topic);
+                }
+            
         } 
     } else {
         print(3, "There is no options to load sqlite authentication plugin.");
@@ -93,13 +104,20 @@ int mosquitto_auth_acl_check(void *user_data, int access,
         const struct mosquitto *client,  
         const struct mosquitto_acl_msg *msg) {
     print(4, "FUNCTION: MOSQUITTO_AUTH_ACL_CHECK [%s]", client);
-    if (strncmp(msg->topic, "/teste", 5) == 0) {
+    if (strncmp(msg->topic, manage_user_topic, strlen(manage_user_topic)) == 0) {
         if (access == MOSQ_ACL_SUBSCRIBE) {
             print(3, "Your subscription was rejected by server on topic %s for user %s", \
                 msg->topic, user->username);
         } else {
-            print(3, "Your publishing was rejected by server on topic %s for user %s", \
-                msg->topic, user->username);
+            char *payload = malloc(sizeof(char *) * msg->payloadlen +1);
+            snprintf(payload, msg->payloadlen +1, msg->payload);
+            print(4, "Loading parameters: %s on topic: %s", \
+                payload, msg->topic);
+            parse_to_manage_users(&manage_user, payload);
+            print(4, "Processed value: \n\t%s, \n\t%s, \n\t%s, \n\t%d", manage_user->username, \
+            manage_user->password, manage_user->action, manage_user->is_admin);
+            payload = NULL;
+            manage_user = NULL;
         }
         return MOSQ_ERR_ACL_DENIED;
     }else {
@@ -125,7 +143,7 @@ int mosquitto_auth_unpwd_check(void *user_data, const struct mosquitto *client,
         print(1, "User successfuly authenticated.");
         return MOSQ_ERR_SUCCESS;  
     }
-    
+
     print(2, "The provided username or password is incorrect.");
     return MOSQ_ERR_ACL_DENIED;
 }
